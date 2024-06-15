@@ -1052,6 +1052,22 @@ func (c *cache) Items() map[string]Item {
 	return m
 }
 
+func (c *cache) Keys() []string {
+	c.mu.RLock()
+	defer c.mu.RUnlock()
+	keys := make([]string, 0, len(c.items))
+	now := time.Now().UnixNano()
+	for key, v := range c.items {
+		if v.Expiration > 0 {
+			if now > v.Expiration {
+				continue
+			}
+		}
+		keys = append(keys, key)
+	}
+	return keys
+}
+
 // Returns the number of items in the cache. This may include items that have
 // expired, but have not yet been cleaned up.
 func (c *cache) ItemCount() int {
